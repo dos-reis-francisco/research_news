@@ -30,6 +30,7 @@ import argparse
 import datetime as dt
 import html
 import json
+import os
 import re
 import sys
 import time
@@ -556,6 +557,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="description" content="Digest de nouveautes scientifiques : microstructures lattices, optimisation topologique, ML pour le design.">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ResearchNews">
 <title>Digest recherche - {date}</title>
 <style>
 :root {{
@@ -564,44 +574,53 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   --border:#262b36;
 }}
 * {{ box-sizing:border-box; }}
+html {{ -webkit-tap-highlight-color:transparent; }}
 body {{ margin:0; background:var(--bg); color:var(--ink);
   font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  font-size:15px; line-height:1.5; }}
-header {{ padding:24px 32px; border-bottom:1px solid var(--border);
-  background:linear-gradient(180deg,#1b1f29,#15181f); }}
-header h1 {{ margin:0 0 6px; font-size:22px; }}
-header .meta {{ color:var(--muted); font-size:13px; }}
-main {{ max-width:1100px; margin:0 auto; padding:24px 32px 80px; }}
-.summary {{ display:flex; gap:12px; flex-wrap:wrap; margin:16px 0 28px; }}
+  font-size:15px; line-height:1.5;
+  padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }}
+header {{ padding:24px 20px; border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#1b1f29,#15181f);
+  position:sticky; top:0; z-index:10; backdrop-filter:blur(6px); }}
+header h1 {{ margin:0 0 6px; font-size:20px; }}
+header .meta {{ color:var(--muted); font-size:12px; }}
+main {{ max-width:1100px; margin:0 auto; padding:20px 16px 80px; }}
+.summary {{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 24px; }}
 .stat {{ background:var(--panel); border:1px solid var(--border);
-  border-radius:10px; padding:12px 16px; min-width:120px; }}
-.stat .n {{ font-size:24px; font-weight:700; color:var(--accent); }}
-.stat .l {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }}
-section {{ margin:28px 0; }}
-section h2 {{ font-size:18px; border-bottom:1px solid var(--border);
-  padding-bottom:8px; margin:0 0 14px; }}
-section h2 .count {{ color:var(--muted); font-weight:400; font-size:13px; }}
+  border-radius:10px; padding:10px 14px; min-width:100px; }}
+.stat .n {{ font-size:22px; font-weight:700; color:var(--accent); }}
+.stat .l {{ color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }}
+section {{ margin:24px 0; }}
+section h2 {{ font-size:17px; border-bottom:1px solid var(--border);
+  padding-bottom:8px; margin:0 0 12px; }}
+section h2 .count {{ color:var(--muted); font-weight:400; font-size:12px; }}
 article {{ background:var(--panel); border:1px solid var(--border);
-  border-radius:10px; padding:16px 18px; margin:0 0 12px; }}
+  border-radius:10px; padding:14px 16px; margin:0 0 10px; }}
 article:hover {{ border-color:#3a4252; }}
-article h3 {{ margin:0 0 6px; font-size:16px; }}
+article h3 {{ margin:0 0 6px; font-size:15px; }}
 article h3 a {{ color:var(--ink); text-decoration:none; }}
 article h3 a:hover {{ color:var(--accent); }}
-.row {{ display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-  margin:6px 0 8px; font-size:12px; color:var(--muted); }}
-.tag {{ background:var(--tag); color:var(--ink); padding:2px 8px;
-  border-radius:999px; font-size:11px; }}
+.row {{ display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  margin:6px 0 8px; font-size:11px; color:var(--muted); }}
+.tag {{ background:var(--tag); color:var(--ink); padding:2px 7px;
+  border-radius:999px; font-size:10px; }}
 .tag.theme {{ background:#1f3a2a; color:var(--green); }}
 .tag.src {{ background:#2a2233; color:#c9a6ff; }}
 .tag.hot {{ background:#3a2418; color:var(--hot); }}
 a.btn {{ display:inline-block; padding:3px 10px; border-radius:6px;
   background:#223047; color:var(--accent); text-decoration:none;
-  font-size:12px; border:1px solid #2c3e5a; }}
+  font-size:11px; border:1px solid #2c3e5a; }}
 a.btn.pdf {{ background:#3a2418; color:var(--hot); border-color:#5a3422; }}
-.abs {{ color:#c2c8d2; font-size:14px; }}
-.authors {{ color:var(--muted); font-size:12px; font-style:italic; }}
-footer {{ text-align:center; color:var(--muted); font-size:12px;
-  padding:24px; border-top:1px solid var(--border); }}
+.abs {{ color:#c2c8d2; font-size:13px; }}
+.authors {{ color:var(--muted); font-size:11px; font-style:italic; }}
+footer {{ text-align:center; color:var(--muted); font-size:11px;
+  padding:20px; border-top:1px solid var(--border); }}
+@media (max-width:640px) {{
+  header {{ padding:16px 14px; }}
+  header h1 {{ font-size:18px; }}
+  main {{ padding:14px 10px 60px; }}
+  article {{ padding:12px 12px; }}
+}}
 </style>
 </head>
 <body>
@@ -617,8 +636,20 @@ footer {{ text-align:center; color:var(--muted); font-size:12px;
   </div>
   {sections}
 </main>
-<footer>Genere par <code>tools/research_news/research_news.py</code> &middot;
-  {n_sources} sources interrogees</footer>
+<footer>Genere par <code>research_news.py</code> &middot;
+  {n_sources} sources interrogees &middot; <span id="upd">chargement...</span></footer>
+<script>
+// Enregistrement du service worker pour le mode hors-ligne / PWA
+if ('serviceWorker' in navigator) {{
+  navigator.serviceWorker.register('./sw.js').then(() => {{
+    document.getElementById('upd').textContent = 'PWA active (hors-ligne dispo)';
+  }}).catch((e) => {{
+    document.getElementById('upd').textContent = 'PWA: ' + e;
+  }});
+}} else {{
+  document.getElementById('upd').textContent = 'PWA non supportee sur ce navigateur';
+}}
+</script>
 </body>
 </html>
 """
@@ -726,16 +757,26 @@ def main(argv: Optional[List[str]] = None) -> int:
                         help="Limiter a une ou plusieurs sources (repeter)")
     parser.add_argument("--json", action="store_true",
                         help="Sauver aussi un export JSON des papiers")
+    parser.add_argument("--ci", action="store_true",
+                        help="Mode CI : genere uniquement index.html (pas de fichier "
+                             "horodate), desactive le navigateur, lit S2_API_KEY dans "
+                             "l'environnement. Utilise par GitHub Actions.")
     args = parser.parse_args(argv)
 
     cfg = load_config(args.config)
     if args.days is not None:
         cfg["window_days"] = args.days
-    if args.no_browser:
+    if args.no_browser or args.ci:
         cfg["open_browser"] = False
     if args.source:
         cfg["sources"] = {k: (k in args.source) for k in
                           ("arxiv", "semantic_scholar", "openalex")}
+    # cle API Semantic Scholar depuis l'env (CI) si pas deja dans la config
+    if not cfg.get("semantic_scholar_api_key"):
+        env_key = os.environ.get("S2_API_KEY", "")
+        if env_key:
+            cfg["semantic_scholar_api_key"] = env_key
+            log("Cle API Semantic Scholar lue depuis S2_API_KEY (env)")
 
     now = dt.datetime.utcnow()
     since = now - dt.timedelta(days=int(cfg.get("window_days", 14)))
@@ -763,12 +804,33 @@ def main(argv: Optional[List[str]] = None) -> int:
     log(f"Apres filtrage theme + dedoublonnage : {len(scored)} papiers")
 
     # sortie
-    out_dir = PROJECT_ROOT / cfg.get("output_dir", "DATAS/_research_news")
+    out_dir = PROJECT_ROOT / cfg.get("output_dir", "output")
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = now.strftime("%Y-%m-%d_%H%M")
-    html_path = out_dir / f"digest_{stamp}.html"
 
     html_content = render_html(scored, cfg, now, per_source)
+
+    if args.ci:
+        # Mode CI : uniquement index.html (GitHub Pages sert la racine de output/)
+        index_path = out_dir / "index.html"
+        with open(index_path, "w", encoding="utf-8") as fh:
+            fh.write(html_content)
+        log(f"CI : index.html ecrit -> {index_path}")
+        # copier les assets PWA depuis public/ et icons/ si presents
+        public_dir = PROJECT_ROOT / "public"
+        icons_dir = PROJECT_ROOT / "icons"
+        for src in [public_dir / "manifest.json", public_dir / "sw.js",
+                    icons_dir / "icon-192.png", icons_dir / "icon-512.png"]:
+            if src.exists():
+                dst = out_dir / src.name
+                dst.write_bytes(src.read_bytes())
+                log(f"CI : copie {src.name} -> {dst}")
+        print(f"\n[CI] Digest genere : {index_path}")
+        print(f"[CI] Stats         : {per_source} -> {len(scored)} papiers retenus")
+        return 0
+
+    # mode local : fichier horodate + index.html
+    html_path = out_dir / f"digest_{stamp}.html"
     with open(html_path, "w", encoding="utf-8") as fh:
         fh.write(html_content)
     log(f"HTML : {html_path}")

@@ -1,5 +1,7 @@
+# Sortie locale du script (les digests generes en local)
 output/
-*.html
-*.json
+
+# Python
 __pycache__/
+*.pyc
 *.log

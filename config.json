@@ -1,0 +1,63 @@
+{
+  "_comment": "Configuration de l'agregateur de nouveautes scientifiques. Projet autonome ~/research_news/.",
+  "window_days": 14,
+  "max_per_source": 80,
+  "open_browser": true,
+  "output_dir": "output",
+  "mailto": "research-news@local.dev",
+  "semantic_scholar_api_key": "",
+  "sources": {
+    "arxiv": true,
+    "semantic_scholar": true,
+    "openalex": true
+  },
+  "arxiv_categories": [
+    "cond-mat.mtrl-sci",
+    "physics.comp-ph",
+    "cs.CE",
+    "cs.CG",
+    "cs.LG",
+    "math.OC",
+    "cs.AI"
+  ],
+  "themes": {
+    "Lattices & metamaterials": {
+      "weight": 1.0,
+      "keywords": [
+        "lattice structure", "lattice material", "mechanical metamaterial",
+        "architected material", "architected lattice", "auxetic",
+        "cellular material", "truss lattice", "plate lattice",
+        "shell lattice", "microstructure lattice", "unit cell",
+        "mechanical lattice", "lattice metamaterial"
+      ]
+    },
+    "Topology optimization": {
+      "weight": 1.0,
+      "keywords": [
+        "topology optimization", "topology optimisation", "topological optimization",
+        "SIMP", "level set", "level-set", "homogenization", "homogenisation",
+        "inverse design", "inverse homogenization", "density-based optimization",
+        "compliance minimization", "multiscale optimization",
+        "de-homogenization", "dehomogenization", "structural optimization"
+      ]
+    },
+    "ML for design": {
+      "weight": 1.0,
+      "keywords": [
+        "machine learning", "neural operator", "deep learning",
+        "generative design", "surrogate model", "neural network",
+        "graph neural", "diffusion model", "variational autoencoder",
+        "reinforcement learning", "physics-informed neural",
+        "data-driven design", "differentiable simulation"
+      ]
+    }
+  },
+  "hard_filters": {
+    "_comment": "Au moins un de ces termes doit apparaitre (titre OU resume). Vide = tout garder.",
+    "require_any": [
+      "lattice", "metamaterial", "microstructure", "architected",
+      "topology optim", "homogeniz", "truss", "cellular solid",
+      "unit cell", "auxetic", "inverse design", "surrogate"
+    ]
+  }
+}
